@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bajaj Formulations — Daily Review Points (Live)</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&display=swap');
+:root{
+  --bg:#0a0d15; --bg2:#0d1119; --card:#121727; --card2:#151b2e;
+  --border:#1e2537; --border2:#28304a;
+  --text:#f2f5fa; --muted:#8a92a8; --faint:#5b6377;
+  --green:#4fd396; --yellow:#f2c94c; --orange:#ee9b4a; --red:#ef7d70; --deepred:#e05252;
+  --blue:#3b5bfd; --blue2:#2f4be0;
+  --pill-pending-bg:rgba(242,201,76,.10); --pill-overdue-bg:rgba(239,125,112,.12); --pill-done-bg:rgba(79,211,150,.12);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:var(--bg);color:var(--text);font-family:'Sora',ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;font-size:14px;-webkit-font-smoothing:antialiased;display:flex;flex-direction:column;min-height:100vh}
+.num{font-variant-numeric:tabular-nums}
+
+/* ---------- Header ---------- */
+header{display:flex;align-items:center;justify-content:space-between;padding:22px 28px;gap:16px;flex-wrap:wrap}
+.brand{display:flex;gap:14px;align-items:flex-start}
+.brand .bar{width:5px;border-radius:3px;background:var(--blue);align-self:stretch}
+.brand h1{font-size:26px;font-weight:800;letter-spacing:.2px}
+.brand .sub{color:var(--muted);font-size:14px;margin-top:2px;font-weight:400}
+.hright{display:flex;align-items:center;gap:22px}
+.clockwrap{text-align:right}
+.clock{display:flex;align-items:center;gap:10px;font-size:26px;font-weight:800;letter-spacing:2px}
+.clock svg{opacity:.8}
+.hdate{color:var(--muted);font-size:12.5px;margin-top:2px}
+.divv{width:1px;height:44px;background:var(--border)}
+.sync{display:flex;align-items:center;gap:10px}
+.syncdot{width:13px;height:13px;border-radius:50%;background:var(--green);box-shadow:0 0 0 4px rgba(79,211,150,.15);flex:none}
+.syncdot.err{background:var(--red);box-shadow:0 0 0 4px rgba(239,125,112,.15)}
+.synctxt .l1{color:var(--muted);font-size:10.5px;letter-spacing:2px}
+.synctxt .l2{font-size:13.5px}
+.wifi{color:var(--green);cursor:pointer;background:none;border:none;padding:4px}
+.wifi:hover{color:var(--text)}
+.wifi:focus-visible{outline:2px solid var(--blue);border-radius:6px}
+
+/* ---------- Layout ---------- */
+main{flex:1;padding:0 28px 24px;overflow:auto}
+.viewhead{display:flex;align-items:baseline;justify-content:space-between;margin:8px 0 18px;gap:12px;flex-wrap:wrap}
+.viewhead h2{font-size:22px;font-weight:700}
+.hint{color:var(--faint);font-size:14px}
+.errbar{background:rgba(224,82,82,.12);border:1px solid rgba(224,82,82,.4);color:#ffb0a8;border-radius:10px;padding:12px 16px;margin-bottom:16px;display:none;font-size:13px}
+.errbar button{margin-left:12px;background:var(--deepred);border:none;color:#fff;border-radius:6px;padding:5px 12px;cursor:pointer;font-family:inherit}
+
+/* ---------- KPI cards ---------- */
+.kpigrid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
+@media(max-width:900px){.kpigrid{grid-template-columns:repeat(2,1fr)}}
+.kpi{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:22px 24px;min-height:300px;display:flex;flex-direction:column;cursor:pointer;transition:border-color .15s, transform .1s;position:relative}
+.kpi:hover{border-color:var(--border2)}
+.kpi:focus-visible{outline:2px solid var(--blue)}
+.kpi .top{display:flex;justify-content:space-between;align-items:center;color:var(--muted)}
+.kpi .label{letter-spacing:3px;font-size:14px;font-weight:600}
+.kpi .subpct{color:var(--muted);font-size:12.5px;margin-top:8px}
+.kpi .big{font-size:78px;font-weight:800;margin-top:auto;line-height:1}
+.kpi .foot{position:absolute;right:22px;bottom:20px;color:var(--faint);font-size:12.5px}
+.c-white{color:var(--text)}.c-green{color:var(--green)}.c-yellow{color:var(--yellow)}.c-red{color:var(--red)}
+.compbar{margin-top:18px;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px 24px;display:flex;align-items:center;gap:22px}
+.compbar .lbl .t{letter-spacing:2px;color:var(--muted);font-size:11.5px;font-weight:600}
+.compbar .lbl .v{color:var(--green);font-size:30px;font-weight:800}
+.track{flex:1;height:14px;background:#1b2133;border-radius:99px;overflow:hidden}
+.fill{height:100%;background:var(--green);border-radius:99px;transition:width .5s}
+.compbar .go{color:var(--muted);font-size:13px;cursor:pointer;background:none;border:none;font-family:inherit}
+.compbar .go:hover{color:var(--text)}
+
+/* ---------- Charts ---------- */
+.panel{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:22px 26px}
+.duo{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media(max-width:900px){.duo{grid-template-columns:1fr}}
+.paneltitle{font-size:17px;font-weight:600;margin-bottom:18px}
+.vchart{display:flex;align-items:flex-end;gap:0;height:340px;position:relative;padding-left:26px}
+.gridlines{position:absolute;left:26px;right:0;top:0;bottom:26px}
+.gl{position:absolute;left:0;right:0;border-top:1px dashed #232b42}
+.gl span{position:absolute;left:-24px;top:-8px;color:var(--faint);font-size:11px}
+.vcol{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;cursor:pointer;background:none;border:none;font-family:inherit}
+.vcol:focus-visible{outline:2px solid var(--blue);border-radius:8px}
+.vbar{width:58%;max-width:96px;border-radius:8px 8px 3px 3px;transition:height .5s;min-height:2px}
+.vval{color:var(--text);font-weight:700;font-size:16px;margin-bottom:6px}
+.vlab{color:var(--muted);font-size:12.5px;margin-top:10px;height:26px}
+.empty{height:340px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:10px}
+.empty .t{color:var(--muted);font-size:19px}
+.empty .s{color:var(--faint);font-size:12.5px;max-width:320px}
+
+/* horizontal bars */
+.hchart{padding:14px 8px 6px}
+.hrow{display:flex;align-items:center;gap:14px;margin-bottom:16px;cursor:pointer;background:none;border:none;width:100%;font-family:inherit}
+.hrow:focus-visible{outline:2px solid var(--blue);border-radius:8px}
+.hlab{width:130px;text-align:right;color:var(--text);font-size:13.5px;flex:none}
+.htrack{flex:1;display:flex;align-items:center;gap:10px}
+.hbar{height:56px;background:var(--red);border-radius:10px;transition:width .5s;min-width:6px}
+.hval{font-weight:700;font-size:16px}
+.haxis{display:flex;margin-left:144px;color:var(--faint);font-size:11px;justify-content:space-between;padding-right:20px}
+
+/* ---------- Table ---------- */
+.controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.pillbtn{border:1px solid var(--border2);background:transparent;color:var(--text);border-radius:99px;padding:9px 20px;font-size:14px;cursor:pointer;font-family:inherit;font-weight:600}
+.pillbtn.on{background:var(--blue);border-color:var(--blue)}
+select.dept{background:var(--card2);border:1px solid var(--border2);color:var(--text);border-radius:99px;padding:9px 16px;font-size:13.5px;font-family:inherit}
+.search{display:flex;align-items:center;gap:8px;background:var(--card2);border:1px solid var(--border2);border-radius:99px;padding:9px 16px;color:var(--faint)}
+.search input{background:none;border:none;color:var(--text);font-family:inherit;font-size:13.5px;outline:none;width:150px}
+.tablewrap{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:auto;max-height:calc(100vh - 300px)}
+table{width:100%;border-collapse:collapse;min-width:980px}
+thead th{position:sticky;top:0;background:#161c2e;color:var(--muted);letter-spacing:1.5px;font-size:11.5px;text-align:left;padding:14px 12px;white-space:nowrap;z-index:2}
+tbody td{padding:14px 12px;border-top:1px solid #1a2136;font-size:13.5px;vertical-align:top}
+tbody tr{cursor:pointer}
+tbody tr:hover td{background:#182036}
+tr.ovd td{background:#1d1218}
+tr.ovd:hover td{background:#241722}
+tr.ovd .pt,tr.ovd .desc{color:var(--red)}
+.trunc{max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.trunc.sm{max-width:110px}
+.dpos{color:var(--red);font-weight:700}
+.dneg{color:var(--text)}
+.pill{display:inline-block;border-radius:99px;padding:5px 15px;font-size:12px;font-weight:700}
+.pill.pending{color:var(--yellow);background:var(--pill-pending-bg);border:1px solid rgba(242,201,76,.55)}
+.pill.overdue{color:var(--red);background:var(--pill-overdue-bg);border:1px solid rgba(239,125,112,.55)}
+.pill.done{color:var(--green);background:var(--pill-done-bg);border:1px solid rgba(79,211,150,.55)}
+
+/* ---------- Modal ---------- */
+.modalbg{position:fixed;inset:0;background:rgba(4,6,12,.75);display:none;align-items:center;justify-content:center;z-index:50;padding:20px}
+.modal{background:var(--card2);border:1px solid var(--border2);border-radius:16px;max-width:640px;width:100%;max-height:85vh;overflow:auto;padding:26px 28px}
+.modal h3{font-size:18px;margin-bottom:4px}
+.modal .mid{color:var(--faint);font-size:12px;margin-bottom:18px}
+.field{display:grid;grid-template-columns:170px 1fr;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);font-size:13.5px}
+.field .k{color:var(--muted);letter-spacing:.5px}
+.field .v{white-space:pre-wrap}
+.mclose{margin-top:18px;background:var(--blue);border:none;color:#fff;border-radius:8px;padding:10px 22px;cursor:pointer;font-family:inherit;font-weight:600}
+
+/* ---------- Bottom nav ---------- */
+nav{background:var(--bg2);border-top:1px solid var(--border);padding:12px 28px;display:flex;align-items:center;justify-content:center;gap:8px;position:sticky;bottom:0;z-index:10}
+nav .tab{background:none;border:none;color:var(--text);font-family:inherit;font-size:16.5px;font-weight:700;padding:12px 26px;border-radius:12px;cursor:pointer}
+nav .tab.on{background:var(--blue)}
+nav .tab:hover:not(.on){background:#161d31}
+.autobtn{position:absolute;right:28px;background:none;border:none;color:var(--yellow);font-family:inherit;letter-spacing:2px;font-size:12.5px;font-weight:700;cursor:pointer}
+.autobtn.live{color:var(--green)}
+@media(max-width:760px){nav .tab{font-size:13px;padding:10px 12px}.autobtn{position:static}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <div class="bar"></div>
+    <div>
+      <h1>Bajaj Formulations</h1>
+      <div class="sub">Daily Review Points — Live</div>
+    </div>
+  </div>
+  <div class="hright">
+    <div class="clockwrap">
+      <div class="clock num"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span id="clock">--:--:--</span></div>
+      <div class="hdate" id="hdate"></div>
+    </div>
+    <div class="divv"></div>
+    <div class="sync">
+      <div class="syncdot" id="syncdot"></div>
+      <div class="synctxt">
+        <div class="l1">LIVE</div>
+        <div class="l2" id="syncago">connecting…</div>
+      </div>
+    </div>
+    <button class="wifi" id="refreshbtn" title="Sync now">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 9a10 10 0 0 1 14 0M8.5 12.5a5 5 0 0 1 7 0"/><circle cx="12" cy="16.5" r="1.4" fill="currentColor"/></svg>
+    </button>
+  </div>
+</header>
+
+<main>
+  <div class="errbar" id="errbar"></div>
+  <div id="viewroot"></div>
+</main>
+
+<nav>
+  <button class="tab" data-v="kpi">KPI Overview</button>
+  <button class="tab" data-v="dept">Overdue by Dept</button>
+  <button class="tab" data-v="aging">Aging &amp; Trend</button>
+  <button class="tab" data-v="table">Full Table</button>
+  <button class="autobtn" id="autobtn">PAUSED (MANUAL)</button>
+</nav>
+
+<div class="modalbg" id="modalbg"><div class="modal" id="modal"></div></div>
+
+<script>
+/* ================= CONFIG ================= */
+const SHEET_ID = "1rLfzz8_YT4LvwRCSbN1fgpXcZ32_hddHSlkbQZdClmA";
+const API_KEY  = "AIzaSyBCy2tFoH70BeuUJ_ZMI43ljYTrVfZbGZ4";
+const BUCKETS = [
+  {key:"notdue", label:"Not yet due", color:"var(--green)",  test:d=>d<=0},
+  {key:"b12",   label:"1–2 days",    color:"var(--yellow)", test:d=>d>=1&&d<=2},
+  {key:"b35",   label:"3–5 days",    color:"var(--orange)", test:d=>d>=3&&d<=5},
+  {key:"b610",  label:"6–10 days",   color:"#ec7f52",       test:d=>d>=6&&d<=10},
+  {key:"b10p",  label:">10 days",    color:"var(--red)",    test:d=>d>10},
+];
+
+/* ================= STATE ================= */
+let tasks=[], rawHeader=[], lastSync=null, syncErr=null;
+let view="kpi";
+let tf={status:"all", dept:"", search:"", bucket:null};   // table filters
+let autoMode=0;  // 0=manual, 1=60s, 2=5min
+let autoTimer=null, tabName=null;
+
+/* ================= FETCH ================= */
+async function discoverTab(){
+  if(tabName) return tabName;
+  const r=await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}?key=${API_KEY}&fields=sheets.properties(title)`);
+  if(!r.ok) throw new Error("Metadata fetch failed ("+r.status+")");
+  const j=await r.json();
+  const titles=(j.sheets||[]).map(s=>s.properties.title);
+  for(const t of titles){
+    const rv=await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(t)}?key=${API_KEY}`);
+    if(!rv.ok) continue;
+    const jv=await rv.json();
+    if(jv.values && jv.values.length>2){ tabName=t; return t; }
+  }
+  throw new Error("No tab with data found");
+}
+async function fetchDirect(){
+  const t=await discoverTab();
+  const r=await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(t)}?key=${API_KEY}&_=${Date.now()}`);
+  if(!r.ok) throw new Error("Values fetch failed ("+r.status+")");
+  const j=await r.json();
+  if(!j.values || j.values.length<3) throw new Error("Tab returned no data");
+  return j.values;
+}
+/* Fallback for the claude.ai artifact sandbox: only api.anthropic.com is reachable,
+   so route the read through the user's Google Drive connector and parse the
+   markdown table from the raw mcp_tool_result block (model text is ignored). */
+function mdToRows(md){
+  const rows=[];
+  md.split("\n").forEach(l=>{
+    l=l.trim(); if(!l.startsWith("|")) return;
+    const cells=l.split("|").slice(1,-1).map(c=>
+      c.replace(/\[merged\]\s*/gi,"").replace(/\\(.)/g,"$1").trim());
+    const isSep=cells.length>0 && cells.every(c=>c===""||/^:?-+:?$/.test(c)) && cells.some(c=>/-/.test(c));
+    if(isSep) return;
+    rows.push(cells);
+  });
+  return rows;
+}
+async function fetchViaConnector(){
+  const resp=await fetch("https://api.anthropic.com/v1/messages",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({
+      model:"claude-sonnet-4-6",
+      max_tokens:1000,
+      messages:[{role:"user",content:`Call the Google Drive read_file_content tool for fileId "${SHEET_ID}". After the tool returns, reply with only the word: done`}],
+      mcp_servers:[{type:"url",url:"https://drivemcp.googleapis.com/mcp/v1",name:"gdrive"}]
+    })
+  });
+  if(!resp.ok) throw new Error("Drive connector call failed ("+resp.status+")");
+  const data=await resp.json();
+  const txt=(data.content||[])
+    .filter(b=>b.type==="mcp_tool_result")
+    .map(b=>Array.isArray(b.content)?b.content.map(c=>c.text||"").join("\n"):"")
+    .join("\n");
+  if(!txt) throw new Error("Drive connector returned no tool result");
+  let md=txt;
+  try{ const p=JSON.parse(txt); if(p.fileContent) md=p.fileContent; }
+  catch(e){
+    const m=txt.match(/"fileContent"\s*:\s*"((?:[^"\\]|\\.)*)"/);
+    if(m){ try{ md=JSON.parse('"'+m[1]+'"'); }catch(_){} }
+  }
+  const rows=mdToRows(md);
+  if(rows.length<3) throw new Error("Could not parse table from connector result");
+  return rows;
+}
+async function sync(){
+  try{
+    let rows, mode="direct";
+    try{ rows=await fetchDirect(); }
+    catch(e1){ mode="connector"; rows=await fetchViaConnector(); }
+    parseRows(rows);
+    lastSync=Date.now(); syncErr=null; syncMode=mode;
+    saveSnapshot();
+    render();
+  }catch(e){
+    syncErr=e.message||"Sync failed";
+    if(tasks.length===0) render(); else updateSyncUI();
+    showErr();
+  }
+  updateSyncUI();
+}
+let syncMode=null;
+
+/* ================= PARSE ================= */
+function norm(s){return (s||"").toString().trim();}
+function parseRows(rows){
+  let hi=-1;
+  for(let i=0;i<Math.min(rows.length,6);i++){
+    if((rows[i]||[]).some(c=>/^s\.?\s*no/i.test(norm(c)))){hi=i;break;}
+  }
+  if(hi<0) throw new Error("Header row (S. No) not found");
+  const H=rows[hi].map(norm); rawHeader=H;
+  const col=(re)=>H.findIndex(h=>re.test(h));
+  const C={
+    sno:col(/^s\.?\s*no/i), raised:col(/raise/i), point:col(/^point/i),
+    desc:col(/^desc/i), resp:col(/^responsible/i), tdate:col(/^task\s*date/i),
+    target:col(/^target/i), tdays:col(/^task\s*days/i),
+    pdays:col(/pending\s*days/i), remarks:col(/^remark/i), status:col(/^status/i)
+  };
+  const deptMap={};
+  const canonDept=(s)=>{
+    const k=norm(s).replace(/\s+/g," ");
+    if(!k) return "Unassigned";
+    const lk=k.toLowerCase();
+    if(!deptMap[lk]) deptMap[lk]=k.length<=3?k.toUpperCase():k;
+    return deptMap[lk];
+  };
+  const out=[];
+  for(let i=hi+1;i<rows.length;i++){
+    const r=rows[i]||[];
+    const g=(ix)=>ix>=0?norm(r[ix]):"";
+    const point=g(C.point), sno=g(C.sno), status=g(C.status);
+    if(!point && !sno && !status) continue;
+    if(!point && !status) continue;
+    const target=parseUS(g(C.target));
+    const pRaw=g(C.pdays).replace(/[^\-\d.]/g,"");
+    let pd;
+    if(target!==null){ pd=Math.round((target-startOfToday())/86400000); }
+    else { pd=pRaw===""?null:parseFloat(pRaw); }
+    const isDone=/done|complete|closed/i.test(status);
+    const daysOver = isDone?0:(pd===null?0:-pd);   // + = overdue
+    out.push({
+      sno, raised:g(C.raised), point, desc:g(C.desc),
+      resp:canonDept(g(C.resp)),
+      tdate:g(C.tdate), target:g(C.target),
+      tdays:g(C.tdays), pdaysRaw:g(C.pdays),
+      remarks:g(C.remarks), statusRaw:status,
+      done:isDone, daysOver,
+      overdue: !isDone && daysOver>0,
+      raw:r
+    });
+  }
+  tasks=out;
+}
+function parseUS(s){const m=/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/.exec(norm(s));if(!m)return null;let y=+m[3];if(y<100)y+=2000;return new Date(y,+m[1]-1,+m[2]).getTime();}
+function startOfToday(){const d=new Date();return new Date(d.getFullYear(),d.getMonth(),d.getDate()).getTime();}
+function fmtShort(s){const t=parseUS(s);if(!t)return s||"—";const d=new Date(t);return (d.getMonth()+1)+"/"+d.getDate()+"/"+String(d.getFullYear()).slice(2);}
+
+/* ================= SNAPSHOTS (daily trend) ================= */
+async function loadSnaps(){try{const r=await window.storage.get("drp-snapshots");return r?JSON.parse(r.value):{};}catch(e){return{};}}
+async function saveSnapshot(){
+  try{
+    const k=new Date(); const key=k.getFullYear()+"-"+String(k.getMonth()+1).padStart(2,"0")+"-"+String(k.getDate()).padStart(2,"0");
+    const snaps=await loadSnaps();
+    snaps[key]={total:tasks.length,done:tasks.filter(t=>t.done).length,pending:tasks.filter(t=>!t.done).length,overdue:tasks.filter(t=>t.overdue).length};
+    const keys=Object.keys(snaps).sort(); while(keys.length>60){delete snaps[keys.shift()];}
+    await window.storage.set("drp-snapshots",JSON.stringify(snaps));
+  }catch(e){/* storage unavailable — trend simply stays empty */}
+}
+
+/* ================= STATS ================= */
+function stats(){
+  const total=tasks.length, done=tasks.filter(t=>t.done).length;
+  const pending=total-done, overdue=tasks.filter(t=>t.overdue).length;
+  const pct=total?Math.round(done/total*1000)/10:0;
+  return {total,done,pending,overdue,pct};
+}
+
+/* ================= RENDER ================= */
+const root=document.getElementById("viewroot");
+function esc(s){return (s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
+function render(){
+  document.querySelectorAll("nav .tab").forEach(b=>b.classList.toggle("on",b.dataset.v===view));
+  if(view==="kpi") renderKPI();
+  else if(view==="dept") renderDept();
+  else if(view==="aging") renderAging();
+  else renderTable();
+  showErr();
+}
+function go(v){view=v;render();}
+function drill(f){ tf=Object.assign({status:"all",dept:"",search:"",bucket:null},f); view="table"; render(); }
+
+/* ---- KPI ---- */
+function renderKPI(){
+  const s=stats();
+  root.innerHTML=`
+  <div class="viewhead"><h2>KPI Overview</h2><div class="hint">Tap any card to drill into the table</div></div>
+  <div class="kpigrid">
+    ${card("TOTAL TASKS",s.total,"c-white","view all",{status:"all"})}
+    ${card("DONE",s.done,"c-green","view done",{status:"done"},s.pct+"% of total")}
+    ${card("PENDING",s.pending,"c-yellow","view pending",{status:"pending"})}
+    ${card("OVERDUE",s.overdue,"c-red","view overdue",{status:"overdue"})}
+  </div>
+  <div class="compbar">
+    <div class="lbl"><div class="t">% COMPLETION</div><div class="v num">${s.pct}%</div></div>
+    <div class="track"><div class="fill" style="width:${s.pct}%"></div></div>
+    <button class="go" onclick='drill({status:"done"})'>view done →</button>
+  </div>`;
+}
+function card(label,val,cls,foot,filter,sub){
+  return `<div class="kpi" tabindex="0" role="button" onclick='drill(${JSON.stringify(filter)})' onkeydown='if(event.key==="Enter")drill(${JSON.stringify(filter)})'>
+    <div class="top"><span class="label">${label}</span><span>→</span></div>
+    ${sub?`<div class="subpct">${sub}</div>`:""}
+    <div class="big num ${cls}">${val}</div>
+    <div class="foot">${foot}</div>
+  </div>`;
+}
+
+/* ---- Overdue by Dept ---- */
+function renderDept(){
+  const m={};
+  tasks.filter(t=>t.overdue).forEach(t=>{ t.resp.split(",").map(x=>norm(x)||"Unassigned").forEach((d,i)=>{ if(i===0){m[d]=(m[d]||0)+1;} }); });
+  const rows=Object.entries(m).sort((a,b)=>b[1]-a[1]);
+  const max=Math.max(4,...rows.map(r=>r[1]));
+  root.innerHTML=`
+  <div class="viewhead"><h2>Overdue by Responsible Department</h2><div class="hint">Tap a bar to drill down · sorted by count</div></div>
+  <div class="panel hchart">
+    ${rows.length?rows.map(([d,c])=>`
+      <button class="hrow" onclick='drill({status:"overdue",dept:${JSON.stringify(d)}})'>
+        <span class="hlab">${esc(d)}</span>
+        <span class="htrack"><span class="hbar" style="width:${c/max*88}%"></span><span class="hval num">${c}</span></span>
+      </button>`).join("")
+    :`<div class="empty"><div class="t">No overdue tasks</div><div class="s">Everything is on or ahead of target.</div></div>`}
+    ${rows.length?`<div class="haxis">${Array.from({length:max+1},(_,i)=>`<span>${i}</span>`).join("")}</div>`:""}
+  </div>`;
+}
+
+/* ---- Aging & Trend ---- */
+async function renderAging(){
+  const pend=tasks.filter(t=>!t.done);
+  const counts=BUCKETS.map(b=>pend.filter(t=>b.test(t.daysOver)).length);
+  const max=Math.max(2,...counts);
+  const ceil=Math.ceil(max/2)*2;
+  const gls=[];for(let v=0;v<=ceil;v+=2){gls.push(v);}
+  root.innerHTML=`
+  <div class="viewhead"><h2>Aging &amp; Trend</h2><div class="hint">Tap a bucket to drill down · pending pipeline health</div></div>
+  <div class="duo">
+    <div class="panel">
+      <div class="paneltitle">Pending tasks by aging</div>
+      <div class="vchart">
+        <div class="gridlines">${gls.map(v=>`<div class="gl" style="bottom:${v/ceil*100}%"><span class="num">${v}</span></div>`).join("")}</div>
+        ${BUCKETS.map((b,i)=>`
+          <button class="vcol" onclick='drill({status:"pending",bucket:"${b.key}"})'>
+            <span class="vval num">${counts[i]}</span>
+            <span class="vbar" style="height:${counts[i]/ceil*(340-52)}px;background:${b.color}"></span>
+            <span class="vlab">${b.label}</span>
+          </button>`).join("")}
+      </div>
+    </div>
+    <div class="panel">
+      <div class="paneltitle">Daily trend (last 30 days)</div>
+      <div id="trendbox" class="empty"><div class="t">Building history…</div><div class="s">Trend will populate as one snapshot is stored per day.</div></div>
+    </div>
+  </div>`;
+  const snaps=await loadSnaps();
+  const keys=Object.keys(snaps).sort().slice(-30);
+  if(keys.length>=2){
+    const box=document.getElementById("trendbox"); if(!box) return;
+    const W=520,Hh=300,pad=34;
+    const maxV=Math.max(2,...keys.map(k=>snaps[k].pending),...keys.map(k=>snaps[k].overdue));
+    const x=i=>pad+i*(W-pad*2)/(keys.length-1);
+    const y=v=>Hh-26-(v/maxV)*(Hh-60);
+    const line=(f,c)=>`<polyline fill="none" stroke="${c}" stroke-width="2.5" points="${keys.map((k,i)=>x(i)+","+y(snaps[k][f])).join(" ")}"/>`+keys.map((k,i)=>`<circle cx="${x(i)}" cy="${y(snaps[k][f])}" r="3" fill="${c}"/>`).join("");
+    box.className=""; box.style.height="340px";
+    box.innerHTML=`<svg width="100%" viewBox="0 0 ${W} ${Hh}">
+      ${line("pending","#f2c94c")}${line("overdue","#ef7d70")}
+      ${keys.map((k,i)=> (keys.length<=10||i%Math.ceil(keys.length/8)===0)?`<text x="${x(i)}" y="${Hh-6}" fill="#5b6377" font-size="10" text-anchor="middle">${k.slice(5)}</text>`:"").join("")}
+    </svg>
+    <div style="display:flex;gap:18px;color:var(--muted);font-size:12px;margin-top:4px">
+      <span><span style="color:#f2c94c">●</span> Pending</span><span><span style="color:#ef7d70">●</span> Overdue</span>
+    </div>`;
+  }
+}
+
+/* ---- Full Table ---- */
+function bucketOf(t){ if(t.done)return null; const b=BUCKETS.find(b=>b.test(t.daysOver)); return b?b.key:null; }
+function filtered(){
+  return tasks.filter(t=>{
+    if(tf.status==="done"&&!t.done)return false;
+    if(tf.status==="pending"&&t.done)return false;
+    if(tf.status==="overdue"&&!t.overdue)return false;
+    if(tf.dept && !t.resp.toLowerCase().includes(tf.dept.toLowerCase()))return false;
+    if(tf.bucket && bucketOf(t)!==tf.bucket)return false;
+    if(tf.search){const q=tf.search.toLowerCase();
+      if(![t.point,t.desc,t.resp,t.remarks,t.raised,t.sno].join(" ").toLowerCase().includes(q))return false;}
+    return true;
+  });
+}
+function renderTable(){
+  const depts=[...new Set(tasks.map(t=>t.resp))].sort();
+  const rows=filtered();
+  const bl=tf.bucket?BUCKETS.find(b=>b.key===tf.bucket).label:null;
+  root.innerHTML=`
+  <div class="viewhead">
+    <div><h2>All Review Points</h2><div class="hint">${rows.length} of ${tasks.length} tasks shown · click a row for details${bl?` · aging: ${bl} <button class="go" style="color:var(--red);background:none;border:none;cursor:pointer;font-family:inherit" onclick='tf.bucket=null;render()'>✕</button>`:""}</div></div>
+    <div class="controls">
+      ${["all","pending","done","overdue"].map(s=>`<button class="pillbtn ${tf.status===s?"on":""}" onclick='tf.status="${s}";render()'>${s[0].toUpperCase()+s.slice(1)}</button>`).join("")}
+      <select class="dept" onchange='tf.dept=this.value;render()'>
+        <option value="">All departments</option>
+        ${depts.map(d=>`<option ${tf.dept===d?"selected":""} value="${esc(d)}">${esc(d)}</option>`).join("")}
+      </select>
+      <span class="search"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input placeholder="Search…" value="${esc(tf.search)}" oninput='tf.search=this.value;renderTableBody()'></span>
+    </div>
+  </div>
+  <div class="tablewrap"><table>
+    <thead><tr><th>#</th><th>POINT</th><th>DESCRIPTION</th><th>RESP. DEPT</th><th>TASK DATE</th><th>TARGET</th><th>DAYS</th><th>REMARKS</th><th>STATUS</th></tr></thead>
+    <tbody id="tbody"></tbody>
+  </table></div>`;
+  renderTableBody();
+}
+function renderTableBody(){
+  const tb=document.getElementById("tbody"); if(!tb)return;
+  const rows=filtered();
+  document.querySelector(".viewhead .hint").childNodes[0].textContent=`${rows.length} of ${tasks.length} tasks shown · click a row for details`;
+  tb.innerHTML=rows.map(t=>{
+    const idx=tasks.indexOf(t);
+    const st=t.done?["done","Done"]:(t.overdue?["overdue","Overdue"]:["pending","Pending"]);
+    const d=t.done?"—":(t.daysOver>0?`<span class="dpos num">+${t.daysOver}</span>`:`<span class="dneg num">${t.daysOver}</span>`);
+    return `<tr class="${t.overdue?"ovd":""}" onclick="openModal(${idx})">
+      <td class="num">${esc(t.sno)||"—"}</td>
+      <td class="pt trunc sm" title="${esc(t.point)}">${esc(t.point)}</td>
+      <td class="desc trunc" title="${esc(t.desc)}">${esc(t.desc)||"—"}</td>
+      <td>${esc(t.resp)}</td>
+      <td class="num">${fmtShort(t.tdate)}</td>
+      <td class="num">${fmtShort(t.target)}</td>
+      <td>${d}</td>
+      <td class="trunc sm" title="${esc(t.remarks)}">${esc(t.remarks)||"—"}</td>
+      <td><span class="pill ${st[0]}">${st[1]}</span></td>
+    </tr>`;
+  }).join("") || `<tr><td colspan="9" style="text-align:center;color:var(--faint);padding:40px">No tasks match the current filters</td></tr>`;
+}
+
+/* ---- Modal (drill to source row) ---- */
+function openModal(i){
+  const t=tasks[i]; if(!t)return;
+  const st=t.done?"Done":(t.overdue?"Overdue":"Pending");
+  const F=[["S. No",t.sno],["Raised by (Dept)",t.raised],["Point",t.point],["Description",t.desc],
+    ["Responsible Dept",t.resp],["Task Date",t.tdate],["Target Date",t.target],["Task Days",t.tdays],
+    ["Task Pending Days (sheet)",t.pdaysRaw],["Days overdue (computed)",t.done?"—":(t.daysOver>0?"+"+t.daysOver:t.daysOver)],
+    ["Remarks",t.remarks],["Status (sheet)",t.statusRaw],["Status (dashboard)",st]];
+  document.getElementById("modal").innerHTML=`
+    <h3>${esc(t.point)||"Review point"}</h3>
+    <div class="mid">Source row from Google Sheet · synced ${lastSync?new Date(lastSync).toLocaleTimeString():"—"}</div>
+    ${F.map(([k,v])=>`<div class="field"><div class="k">${k}</div><div class="v">${esc(String(v||"—"))}</div></div>`).join("")}
+    <button class="mclose" onclick="closeModal()">Close</button>`;
+  document.getElementById("modalbg").style.display="flex";
+}
+function closeModal(){document.getElementById("modalbg").style.display="none";}
+document.getElementById("modalbg").addEventListener("click",e=>{if(e.target.id==="modalbg")closeModal();});
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeModal();});
+
+/* ================= CLOCK / SYNC UI ================= */
+function tick(){
+  const d=new Date();
+  document.getElementById("clock").textContent=[d.getHours(),d.getMinutes(),d.getSeconds()].map(n=>String(n).padStart(2,"0")).join(" : ");
+  document.getElementById("hdate").textContent=d.toLocaleDateString("en-US",{weekday:"long",month:"short",day:"2-digit",year:"numeric"});
+  updateSyncUI();
+}
+function updateSyncUI(){
+  const el=document.getElementById("syncago"), dot=document.getElementById("syncdot");
+  if(syncErr){el.textContent="sync error";dot.classList.add("err");return;}
+  dot.classList.remove("err");
+  if(!lastSync){el.textContent="connecting…";return;}
+  const s=Math.max(0,Math.round((Date.now()-lastSync)/1000));
+  el.textContent="synced "+(s<60?s+"s":Math.floor(s/60)+"m")+" ago";
+}
+function showErr(){
+  const b=document.getElementById("errbar");
+  if(syncErr){b.style.display="block";b.innerHTML=`Could not sync: ${esc(syncErr)}. Inside claude.ai this uses your Google Drive connector — make sure it is connected and enabled for this chat. Opened locally in a browser it uses the Sheets API directly.<button onclick="sync()">Retry</button>`;}
+  else b.style.display="none";
+}
+
+/* ================= AUTO REFRESH ================= */
+const MODES=[["PAUSED (MANUAL)",0],["AUTO (60S)",60000],["AUTO (5 MIN)",300000]];
+function setAuto(i){
+  autoMode=i; const [label,ms]=MODES[i];
+  const b=document.getElementById("autobtn");
+  b.textContent=label; b.classList.toggle("live",ms>0);
+  if(autoTimer)clearInterval(autoTimer);
+  if(ms>0)autoTimer=setInterval(sync,ms);
+}
+document.getElementById("autobtn").addEventListener("click",()=>setAuto((autoMode+1)%MODES.length));
+document.getElementById("refreshbtn").addEventListener("click",sync);
+document.querySelectorAll("nav .tab").forEach(b=>b.addEventListener("click",()=>go(b.dataset.v)));
+
+/* ================= INIT ================= */
+setInterval(tick,1000); tick();
+setAuto(0);
+sync();
+</script>
+</body>
+</html>
